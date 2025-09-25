@@ -1,0 +1,141 @@
+# 🧳 Agência de Viagens - CRUD com Django
+
+Sistema web de gerenciamento de pacotes de viagem, com operações CRUD completas, desenvolvido com Django e estilizado com Bootstrap 5.
+
+## 🧭 1. Visão Geral do Projeto
+
+Este projeto é um sistema web básico de gerenciamento de pacotes de viagens, permitindo:
+
+- Criação
+- Listagem
+- Visualização
+- Edição
+- Exclusão de pacotes
+
+Utiliza **Class-Based Views (CBVs)** para otimizar o desenvolvimento e **Bootstrap 5** para uma interface moderna e responsiva.
+
+---
+
+## 🛠 1.1 Tecnologias Utilizadas
+
+- **Framework Backend**: Django (Python)
+- **Banco de Dados**: SQLite3 (padrão de desenvolvimento)
+- **Frontend**: HTML + CSS (Bootstrap 5.3)
+- **Views**: CBVs – ListView, DetailView, CreateView, UpdateView, DeleteView
+
+---
+
+## 📁 1.2 Estrutura de Diretórios
+
+Viagem/
+├── agencia/
+│ ├── migrations/
+│ ├── templates/
+│ │ └── agencia/
+│ │ ├── viagem_list.html
+│ │ ├── viagem_detail.html
+│ │ ├── viagem_form.html
+│ │ └── viagem_confirm_delete.html
+│ ├── admin.py
+│ ├── models.py
+│ ├── views.py
+│ └── urls.py
+├── Viagem/
+│ ├── settings.py
+│ └── urls.py
+├── templates/
+│ └── base.html
+├── manage.py
+└── db.sqlite3
+
+---
+
+## ⚙️ 2. Configuração e Instalação
+
+### 2.1 Pré-requisitos
+
+- Python 3.8+
+- pip
+- Ambiente Virtual (recomendado)
+
+### 2.2 Instalação
+
+```bash
+# Ativar ambiente virtual
+.venv\Scripts\activate
+
+# Instalar dependências
+pip install django~=5.0
+
+# Registrar o app no settings.py
+# settings.py
+INSTALLED_APPS = [
+    ...
+    'agencia',
+]
+
+# Diretório de templates
+'DIRS': [os.path.join(BASE_DIR, 'templates')],
+
+2.3 Migrações e Execução
+# Criar tabelas
+python manage.py makemigrations agencia
+python manage.py migrate
+
+# Iniciar servidor
+python manage.py runserver
+
+🧱 3. Modelo de Dados - Viagem
+class Viagem(models.Model):
+    titulo = models.CharField(max_length=150)
+    destino = models.CharField(max_length=100)
+    data_partida = models.DateField()
+    data_retorno = models.DateField()
+    duracao_dias = models.IntegerField()
+    preco_base = models.DecimalField(max_digits=10, decimal_places=2)
+    vagas_disponiveis = models.PositiveIntegerField(default=10)
+    tipo_transporte = models.CharField(max_length=50, choices=[('Aéreo', 'Aéreo'), ('Terrestre', 'Terrestre'), ('Marítimo', 'Marítimo')])
+    hospedagem_inclusa = models.BooleanField(default=True)
+    codigo_pacote = models.CharField(max_length=20, unique=True)
+    descricao_detalhada = models.TextField()
+
+🔁 4. Funcionalidades CRUD
+4.1 URLs - agencia/urls.py
+| URL                   | View               | Nome             |
+| --------------------- | ------------------ | ---------------- |
+| `''`                  | `ViagemListView`   | `viagem_lista`   |
+| `'nova/'`             | `ViagemCreateView` | `viagem_nova`    |
+| `'<int:pk>/'`         | `ViagemDetailView` | `viagem_detalhe` |
+| `'<int:pk>/editar/'`  | `ViagemUpdateView` | `viagem_editar`  |
+| `'<int:pk>/excluir/'` | `ViagemDeleteView` | `viagem_excluir` |
+
+4.2 Views - agencia/views.py
+
+CreateView / UpdateView: usam fields = '__all__' para geração automática de formulário.
+
+ListView: renderiza viagem_list.html, variável viagens.
+
+DetailView: renderiza viagem_detail.html, variável viagem.
+
+DeleteView: usa viagem_confirm_delete.html.
+
+
+🎨 5. Interface e Estilização (Bootstrap 5)
+5.1 Template Base (base.html)
+
+Todos os templates estendem este layout, com:
+{% block content %}{% endblock %}
+
+5.2 Estilização do Formulário (viagem_form.html)
+
+5.3 Convenções Visuais
+
+Preços: {{ viagem.preco_base|floatformat:2 }}
+
+Datas: {{ viagem.data_partida|date:"d/m/Y" }}
+
+Tabelas: table table-striped table-hover
+
+✅ Conclusão
+
+Este projeto oferece uma base sólida para sistemas web com operações CRUD usando Django. Ideal para iniciantes aprenderem boas práticas como CBVs, templates com herança e estrutura modular.
