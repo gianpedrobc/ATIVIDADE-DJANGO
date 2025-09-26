@@ -139,3 +139,202 @@ Tabelas: table table-striped table-hover
 ✅ Conclusão
 
 Este projeto oferece uma base sólida para sistemas web com operações CRUD usando Django. Ideal para iniciantes aprenderem boas práticas como CBVs, templates com herança e estrutura modular.
+
+
+
+
+📑 Documentação do Módulo de Autenticação
+
+Este módulo descreve a implementação completa do sistema de autenticação de usuários, incluindo as funcionalidades de login, logout e cadastro, todas customizadas com estilização Bootstrap para uma experiência de usuário aprimorada.
+
+1. Configuração de URLs e Formulários Customizados
+
+Para integrar a estilização Bootstrap (classe form-control) sem dependências de terceiros, utilizamos formulários customizados que herdam os formulários padrão do Django (AuthenticationForm e UserCreationForm).
+
+1.1. Arquivo: agencia/forms.py
+
+Crie este arquivo para definir os formulários de autenticação estilizados.
+Python
+
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+
+class BootstrapAuthenticationForm(AuthenticationForm):
+    """Herda o formulário de login e aplica a classe 'form-control'."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Define os rótulos em Português
+        self.fields['username'].label = 'Nome de Usuário'
+        self.fields['password'].label = 'Senha'
+        
+        # Aplica a classe Bootstrap aos campos
+        for field_name in self.fields:
+            self.fields[field_name].widget.attrs['class'] = 'form-control'
+
+class BootstrapUserCreationForm(UserCreationForm):
+    """Herda o formulário de criação de usuário e aplica a classe 'form-control'."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Define os rótulos e textos de ajuda em Português
+        self.fields['username'].label = 'Nome de Usuário'
+        self.fields['password1'].label = 'Senha'
+        self.fields['password2'].label = 'Confirmação de Senha'
+        self.fields['password2'].help_text = 'Digite a mesma senha novamente para confirmação.'
+        
+        # Aplica a classe Bootstrap aos campos
+        for field_name in self.fields:
+            self.fields[field_name].widget.attrs['class'] = 'form-control'
+
+2. Configuração de Views (Cadastro)
+
+A view de login (LoginView) é customizada diretamente no urls.py. No entanto, para o Cadastro de Usuário, é necessário criar uma Class-Based View (CBV) no views.py.
+
+2.1. Arquivo: agencia/views.py
+
+Adicione a CadastroUsuarioView que utiliza o formulário customizado e define o template de sucesso (redirecionando para o login).
+Python
+
+# agencia/views.py
+
+from django.views.generic import CreateView
+from django.urls import reverse_lazy
+from .forms import BootstrapUserCreationForm # Importa o formulário customizado
+# ... (outras imports)
+
+class CadastroUsuarioView(CreateView):
+    """View para criação de novos usuários com estilização Bootstrap."""
+    
+    # Utiliza o formulário customizado para aplicar o estilo e o idioma
+    form_class = BootstrapUserCreationForm 
+    
+    # Template para renderizar o formulário
+    template_name = 'registration/cadastro.html' 
+    
+    # Redireciona para a tela de login após o sucesso
+    success_url = reverse_lazy('login') 
+
+3. Mapeamento de Rotas (URLconf)
+
+Todas as rotas de autenticação são centralizadas no urls.py principal, utilizando o prefixo /contas/. A view de login é definida explicitamente para usar o BootstrapAuthenticationForm.
+
+3.1. Arquivo: Viagem/Viagem/urls.py
+
+Python
+
+from django.contrib import admin
+from django.urls import path, include
+from django.contrib.auth import views as auth_views
+from agencia.forms import BootstrapAuthenticationForm 
+from agencia.views import CadastroUsuarioView 
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    
+    # 1. Rota de Cadastro
+    path('contas/cadastro/', CadastroUsuarioView.as_view(), name='cadastro'),
+    
+    # 2. Rota de Login (Customizada para usar o formulário estilizado)
+    path('contas/login/', auth_views.LoginView.as_view(
+        template_name='registration/login.html', 
+        form_class=BootstrapAuthenticationForm 
+    ), name='login'),
+    
+    # 3. Restante das rotas do Django Auth (Logout, Password Reset)
+    # Estas rotas usarão o prefixo '/contas/' e o sistema de internacionalização do Django
+    path('contas/', include('django.contrib.auth.urls')), 
+    
+    # 4. Rotas da aplicação principal (agencia)
+    path('', include('agencia.urls')), 
+]
+
+4. Configuração de Templates (Front-end)
+
+4.1. Template: agencia/templates/registration/cadastro.html
+
+Este template renderiza o BootstrapUserCreationForm. É crucial notar que o campo é renderizado usando {{ field }}, pois a classe Bootstrap já foi injetada no forms.py.
+HTML
+
+{% extends 'base.html' %}
+{% block title %}Cadastro de Usuário{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-lg mt-5">
+            <div class="card-header bg-success text-white text-center">
+                <h3 class="mb-0">Criar Nova Conta</h3>
+            </div>
+            <div class="card-body">
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            
+                            {{ field }} 
+                            
+                            {% for error in field.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                            
+                            {% if field.help_text %}
+                                <div class="form-text text-muted">{{ field.help_text|safe }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-success w-100 mt-3">
+                        Registrar
+                    </button>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <small class="text-muted">Já tem uma conta? <a href="{% url 'login' %}">Faça Login</a></small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+5. Integração na Interface (Navegação)
+
+A navegação deve ser condicional, mostrando as opções de Entrar e Cadastrar apenas para usuários não autenticados e a opção Sair (Logout) para usuários autenticados.
+
+5.1. Template: templates/base.html (Navegação)
+
+Certifique-se de que o CSS do Bootstrap Icons está no <head> e que a navegação utiliza a estrutura de autenticação condicional:
+HTML
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+    <ul class="navbar-nav">
+        {% if user.is_authenticated %}
+            <li class="nav-item">
+                <span class="navbar-text me-3">
+                    <i class="bi bi-person-circle"></i> Olá, {{ user.username }}
+                </span>
+            </li>
+            <li class="nav-item">
+                <a class="btn btn-outline-light" href="{% url 'logout' %}">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </a>
+            </li>
+        {% else %}
+            <li class="nav-item me-2">
+                <a class="btn btn-outline-light" href="{% url 'cadastro' %}">
+                    <i class="bi bi-person-plus-fill"></i> Cadastrar
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="btn btn-light" href="{% url 'login' %}">
+                    <i class="bi bi-person-fill"></i> Entrar
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</div>
+
